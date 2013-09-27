@@ -128,7 +128,7 @@ Protected Module Helpers
 		Protected Function HeaderComment(HeaderName As String, HeaderValue As String) As String
 		  Select Case HeaderName
 		  Case "Date"
-		    Dim d As Date = HTTPDate(HeaderValue)
+		    Dim d As Date = DateString(HeaderValue)
 		    Dim e As New Date
 		    d.GMTOffset = e.GMTOffset
 		    Return d.ShortDate + " " + d.ShortTime + "(Local time)"
@@ -192,13 +192,13 @@ Protected Module Helpers
 		    Return "Opaque document version marker"
 		    
 		  Case "Expires"
-		    Dim d As Date = HTTPDate(HeaderValue)
+		    Dim d As Date = DateString(HeaderValue)
 		    Dim e As New Date
 		    d.GMTOffset = e.GMTOffset
 		    Return d.ShortDate + " " + d.ShortTime + "(Local time)"
 		    
 		  Case "Last-Modified"
-		    Dim d As Date = HTTPDate(HeaderValue)
+		    Dim d As Date = DateString(HeaderValue)
 		    Dim e As New Date
 		    d.GMTOffset = e.GMTOffset
 		    Return d.ShortDate + " " + d.ShortTime + "(Local time)"

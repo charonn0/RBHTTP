@@ -291,6 +291,7 @@ Protected Class URI
 		#tag ViewProperty
 			Name="Port"
 			Group="Behavior"
+			InitialValue="80"
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty

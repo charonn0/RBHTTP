@@ -10,13 +10,19 @@ Inherits TCPSocket
 		    raw = ""
 		    If reply.HasHeader("Content-Length") Then
 		      Dim contentlength As Integer = Val(reply.GetHeader("Content-Length"))
-		      While raw.LenB < contentlength And Me.BytesAvailable > 0
-		        'RaiseEvent ReceiveProgress(Me.Lookahead.LenB, contentlength, Me.LookAhead)
-		        raw = raw + Me.ReadAll
-		        App.YieldToNextThread
-		      Wend
-		      Reply.MessageBody = Me.Read(contentlength)
+		      If contentlength < Me.Lookahead.LenB Then
+		        raw = Me.(contentlength)
+		      Else
+		        While raw.LenB < contentlength And Me.BytesAvailable > 0
+		          'RaiseEvent ReceiveProgress(Me.Lookahead.LenB, contentlength, Me.LookAhead)
+		          raw = raw + Me.ReadAll
+		          App.YieldToNextThread
+		        Wend
+		      End If
+		    Else
+		      raw = Me.ReadAll
 		    End If
+		    Reply.MessageBody = raw
 		    RaiseEvent Response(reply)
 		  Loop
 		End Sub
@@ -24,31 +30,10 @@ Inherits TCPSocket
 
 
 	#tag Method, Flags = &h0
-		Sub ClearRequestHeaders()
-		  RequestMessage.Headers.DeleteAllHeaders
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub Get(URL As String, TimeoutSeconds As Integer = - 1)
-		  Me.SendRequest("GET", URL, TimeoutSeconds)
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub GetHeaders(URL As String, TimeoutSeconds As Integer = -1)
-		  Me.SendRequest("HEAD", URL, TimeoutSeconds)
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub SendRequest(Method As String, URL As String, TimeoutSeconds As Integer = - 1)
-		  Dim URI As New HTTP.URI(URL)
-		  Me.RequestMessage.MethodName = Method
-		  Me.RequestMessage.SetHeader("Host") = URI.FQDN
-		  Me.RequestMessage.SetHeader("Connection") = "close"
+		Sub SendRequest(HTTPRequest As HTTP.Request, TimeoutSeconds As Integer = - 1)
+		  Dim URI As HTTP.URI = HTTPRequest.Path
+		  HTTPRequest.SetHeader("Connection") = "close"
+		  HTTPRequest.SetHeader("Host") = URI.FQDN
 		  Me.Address = URI.FQDN
 		  Me.Port = URI.Port
 		  
@@ -63,30 +48,8 @@ Inherits TCPSocket
 		  
 		  Me.Connect
 		  
-		  Me.Write(RequestMessage.ToString)
+		  Me.Write(HTTPRequest.ToString)
 		  Me.Flush
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub SetFormData(Form As Dictionary)
-		  RequestMessage.MessageBody = EncodeFormData(Form)
-		  SetRequestHeader("Content-Length", Format(RequestMessage.MessageBody.LenB, "##################0"))
-		  SetRequestHeader("Content-Type", "application/x-www-form-URLEncoded")
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub SetRequestContent(Content As String, ContentType As String)
-		  RequestMessage.MessageBody = Content
-		  SetRequestHeader("Content-Type", ContentType)
-		  SetRequestHeader("Content-Length", Format(RequestMessage.MessageBody.LenB, "##################0"))
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub SetRequestHeader(Name As String, Value As String)
-		  RequestMessage.Headers.SetHeader(Name, Value)
 		End Sub
 	#tag EndMethod
 
@@ -108,27 +71,6 @@ Inherits TCPSocket
 
 
 	#tag Property, Flags = &h21
-		Private mRequest As HTTP.Request
-	#tag EndProperty
-
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  If mRequest = Nil Then
-			    mRequest = New HTTP.Request("GET / HTTP/1.0" + EndOfLine.Windows + EndOfLine.Windows)
-			  End If
-			  return mRequest
-			End Get
-		#tag EndGetter
-		#tag Setter
-			Set
-			  mRequest = value
-			End Set
-		#tag EndSetter
-		RequestMessage As HTTP.Request
-	#tag EndComputedProperty
-
-	#tag Property, Flags = &h21
 		Private TimeOutTimer As Timer
 	#tag EndProperty
 
@@ -140,12 +82,6 @@ Inherits TCPSocket
 			Group="Behavior"
 			Type="String"
 			InheritedFrom="TCPSocket"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="HTTPVersion"
-			Group="Behavior"
-			InitialValue="1.1"
-			Type="Single"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -166,12 +102,6 @@ Inherits TCPSocket
 			Visible=true
 			Group="ID"
 			InheritedFrom="TCPSocket"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="PipeLining"
-			Group="Behavior"
-			InitialValue="False"
-			Type="Boolean"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Port"

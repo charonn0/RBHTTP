@@ -68,12 +68,12 @@ Inherits HTTP.HTTPMessage
 		  If SinceWhen = Nil Then Return False
 		  If HasHeader("If-Modified-Since") Then
 		    Dim d1 As Date
-		    d1 = HTTPDate(GetHeader("If-Modified-Since"))
+		    d1 = DateString(GetHeader("If-Modified-Since"))
 		    Return SinceWhen.TotalSeconds > d1.TotalSeconds
 		    
 		  ElseIf HasHeader("If-Unmodified-Since") Then
 		    Dim d1 As Date
-		    d1 = HTTPDate(GetHeader("If-Unmodified-Since"))
+		    d1 = DateString(GetHeader("If-Unmodified-Since"))
 		    Return SinceWhen.TotalSeconds < d1.TotalSeconds
 		  End If
 		End Function
