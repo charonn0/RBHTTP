@@ -11,7 +11,7 @@ Inherits TCPSocket
 		    If reply.HasHeader("Content-Length") Then
 		      Dim contentlength As Integer = Val(reply.GetHeader("Content-Length"))
 		      If contentlength < Me.Lookahead.LenB Then
-		        raw = Me.(contentlength)
+		        raw = Me.Read(contentlength)
 		      Else
 		        While raw.LenB < contentlength And Me.BytesAvailable > 0
 		          'RaiseEvent ReceiveProgress(Me.Lookahead.LenB, contentlength, Me.LookAhead)
