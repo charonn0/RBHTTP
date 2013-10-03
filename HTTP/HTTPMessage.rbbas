@@ -248,11 +248,15 @@ Protected Class HTTPMessage
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  #pragma BreakOnExceptions Off
 			  If mMIMEType = Nil Then
 			    Dim s As String = NthField(Me.Path.ServerPath, "/", CountFields(Me.Path.ServerPath, "/"))
 			    mMIMEType = mMIMEType.GetType(s)
 			  End If
 			  return mMIMEType
+			  
+			  Exception
+			    Return New ContentType("*/*")
 			End Get
 		#tag EndGetter
 		#tag Setter
