@@ -107,7 +107,6 @@ Inherits ServerSocket
 		      cache = GetCache(Session, clientRequest.Path.ToString)
 		    End If
 		    If cache <> Nil Then
-		      cache.Compressible = False
 		      Me.Log("Page from cache", Log_Debug)
 		      Cache.Expires = New Date
 		      Cache.Expires.TotalSeconds = Cache.Expires.TotalSeconds + 60
@@ -166,25 +165,6 @@ Inherits ServerSocket
 
 	#tag Method, Flags = &h21
 		Private Sub CheckType(ClientRequest As HTTP.Request, ByRef doc As HTTP.Response)
-		  ' This method verifies that the response is proper for a given response.
-		  ' On success this method returns Nil. On error, it returns an error page document.
-		  
-		  Me.Log(CurrentMethodName + "(" + ClientRequest.SessionID + ")", Log_Trace)
-		  Dim tcount As Integer
-		  #If GZIPAvailable Then
-		    ' If the GZip plugin is used, we must confirm that the client has requested
-		    ' gzip-encoded responses. Compression only takes place if the client asks for it.
-		    Dim types() As String = Split(ClientRequest.GetHeader("Accept-Encoding"), ",")
-		    doc.Compressible = False
-		    tcount = UBound(types)
-		    For i As Integer = 0 To tcount
-		      If types(i).Trim = "gzip" Then
-		        doc.Compressible = True
-		        Exit For
-		      End If
-		    Next
-		  #endif
-		  
 		  ' If the request uses HTTP 1.1 or newer and EnforceContentType is True
 		  ' the server will check the request for an "Accept" header, and then confirm
 		  ' that the requested document's actual MIMEType is acceptable. If the
@@ -192,6 +172,7 @@ Inherits ServerSocket
 		  ' client.
 		  If EnforceContentType And ClientRequest.ProtocolVersion > 1.0 And doc.StatusCode < 300 And doc.StatusCode >= 200 Then
 		    Me.Log("Checking Accepts", Log_Trace)
+		    Dim tcount As Integer
 		    tcount = UBound(clientrequest.Headers.AcceptableTypes)
 		    For i As Integer = 0 To tcount
 		      If clientrequest.Headers.AcceptableTypes(i).Accepts(doc.MIMEType) Then
@@ -373,7 +354,6 @@ Inherits ServerSocket
 		  #endif
 		  Me.Log("Runtime exception!" + EndOfLine + logstack , Log_Error)
 		  errpage = GetErrorResponse(500, htmlstack)
-		  errpage.Compressible = False
 		  Me.SendResponse(Sender, errpage)
 		  Sender.Purge
 		End Sub
@@ -642,40 +622,6 @@ Inherits ServerSocket
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Sub GZipResponse(ByRef ResponseDocument As HTTP.Response)
-		  If ResponseDocument.MessageBody.LenB > 0 And ResponseDocument.Compressible Then
-		    #If GZIPAvailable And TargetHasGUI Then
-		      If Not Me.UseCompression Then
-		        If Not ResponseDocument.HasHeader("Content-Encoding") Then ResponseDocument.SetHeader("Content-Encoding") = "Identity"
-		        ResponseDocument.MessageBody = Replace(ResponseDocument.MessageBody, "%COMPRESSION%", "No compression.")
-		        Return
-		      End If
-		      
-		      Me.Log(CurrentMethodName + "(" + ResponseDocument.SessionID + ")", Log_Trace)
-		      Dim gz As MemoryBlock = ResponseDocument.MessageBody
-		      If gz.Byte(0) = &h1F And gz.Byte(1) = &h8B Then Return
-		      Try
-		        Dim size As Integer = ResponseDocument.MessageBody.LenB
-		        gz = GZipPage(Replace(ResponseDocument.MessageBody, "%COMPRESSION%", "Compressed with GZip " + GZip.Version))
-		        ResponseDocument.MessageBody = gz
-		        ResponseDocument.SetHeader("Content-Encoding") ="gzip"
-		        size = gz.LenB * 100 / size
-		        Me.Log("GZipped page to " + Format(size, "##0.0##\%") + " of original", Log_Debug)
-		        ResponseDocument.SetHeader("Content-Length") = Str(gz.LenB)
-		      Catch Error
-		        'Just send the uncompressed data
-		      End Try
-		    #else
-		      ResponseDocument.SetHeader("Content-Encoding") = "Identity"
-		      ResponseDocument.MessageBody = Replace(ResponseDocument.MessageBody, "%COMPRESSION%", "No compression.")
-		    #endif
-		  Else
-		    ResponseDocument.SetHeader("Content-Encoding") = "Identity"
-		  End If
-		End Sub
-	#tag EndMethod
-
 	#tag Method, Flags = &h0
 		Sub Listen()
 		  Me.Log(CurrentMethodName, Log_Trace)
@@ -693,10 +639,42 @@ Inherits ServerSocket
 
 	#tag Method, Flags = &h0
 		Sub Log(Message As String, Type As Integer)
-		  #If DebugBuild Then
+		  #If DebugBuild And RBVersion >= 2013.0 Then
 		    System.DebugLog(Str(Type) + " " + Message.Trim)
 		  #endif
 		  RaiseEvent Log(Message.Trim + EndofLine, Type)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub PrepareCompression(ByRef ResponseDocument As HTTP.Response)
+		  ' If the GZip plugin is used, we must confirm that the client has requested
+		  ' gzip-encoded responses. Compression only takes place if the client asks for it.
+		  #If (GZIPAvailable And TargetHasGUI) Then
+		    Me.Log(CurrentMethodName + "(" + ResponseDocument.SessionID + ")", Log_Trace)
+		    If ResponseDocument.Compressible And ResponseDocument.MessageBody.LenB > 0 And Me.UseCompression Then
+		      Dim gz As MemoryBlock = ResponseDocument.MessageBody
+		      If gz.Byte(0) = &h1F And gz.Byte(1) = &h8B Then Return
+		      Try
+		        gz = Replace(ResponseDocument.MessageBody, "%COMPRESSION%", "Compressed with GZip " + GZip.Version)
+		        Dim size As Integer = gz.LenB
+		        gz = GZip.Compress(gz)
+		        ResponseDocument.MessageBody = gz
+		        ResponseDocument.SetHeader("Content-Encoding") ="gzip"
+		        size = gz.LenB * 100 / size
+		        Me.Log("GZipped page to " + Format(size, "##0.0##\%") + " of original", Log_Debug)
+		        ResponseDocument.SetHeader("Content-Length") = Str(gz.LenB)
+		      Catch Error
+		        Me.Log("GZip error " + Str(GZip.Error), Log_Error)
+		      End Try
+		    Else
+		      If Not ResponseDocument.HasHeader("Content-Encoding") Then ResponseDocument.SetHeader("Content-Encoding") = "Identity"
+		      ResponseDocument.MessageBody = Replace(ResponseDocument.MessageBody, "%COMPRESSION%", "No compression.")
+		    End If
+		  #else
+		    ResponseDocument.SetHeader("Content-Encoding") = "Identity"
+		    ResponseDocument.MessageBody = Replace(ResponseDocument.MessageBody, "%COMPRESSION%", "No compression.")
+		  #endif
 		End Sub
 	#tag EndMethod
 
@@ -791,7 +769,7 @@ Inherits ServerSocket
 		  
 		  PrepareResponse(ResponseDocument, Socket)
 		  PrepareSession(ResponseDocument, session)
-		  GZipResponse(ResponseDocument)
+		  PrepareCompression(ResponseDocument)
 		  
 		  Me.Log("Sending data", Log_Socket)
 		  Socket.Write(ResponseDocument.ToString)
@@ -1301,7 +1279,6 @@ Inherits ServerSocket
 			Name="Index"
 			Visible=true
 			Group="ID"
-			Type="Integer"
 			InheritedFrom="ServerSocket"
 		#tag EndViewProperty
 		#tag ViewProperty
@@ -1331,7 +1308,6 @@ Inherits ServerSocket
 			Name="Name"
 			Visible=true
 			Group="ID"
-			Type="String"
 			InheritedFrom="ServerSocket"
 		#tag EndViewProperty
 		#tag ViewProperty
@@ -1353,7 +1329,6 @@ Inherits ServerSocket
 			Name="Super"
 			Visible=true
 			Group="ID"
-			Type="String"
 			InheritedFrom="ServerSocket"
 		#tag EndViewProperty
 		#tag ViewProperty

@@ -27,10 +27,6 @@ Inherits HTTP.HTTPMessage
 
 
 	#tag Property, Flags = &h0
-		Compressible As Boolean = True
-	#tag EndProperty
-
-	#tag Property, Flags = &h0
 		StatusCode As Integer
 	#tag EndProperty
 

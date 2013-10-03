@@ -172,6 +172,10 @@ Protected Class HTTPMessage
 		AuthUsername As String
 	#tag EndProperty
 
+	#tag Property, Flags = &h0
+		Compressible As Boolean = True
+	#tag EndProperty
+
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
