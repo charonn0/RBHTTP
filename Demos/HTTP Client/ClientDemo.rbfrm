@@ -1,5 +1,5 @@
 #tag Window
-Begin Window Window1
+Begin Window ClientDemo
    BackColor       =   &hFFFFFF
    Backdrop        =   ""
    CloseButton     =   True
@@ -7,7 +7,7 @@ Begin Window Window1
    Frame           =   0
    FullScreen      =   False
    HasBackColor    =   False
-   Height          =   7.5e+1
+   Height          =   400
    ImplicitInstance=   True
    LiveResize      =   True
    MacProcID       =   0
@@ -17,19 +17,31 @@ Begin Window Window1
    MenuBar         =   ""
    MenuBarVisible  =   True
    MinHeight       =   64
-   MinimizeButton  =   False
+   MinimizeButton  =   True
    MinWidth        =   64
-   Placement       =   2
-   Resizeable      =   False
-   Title           =   "HTTP"
+   Placement       =   0
+   Resizeable      =   True
+   Title           =   "Untitled"
    Visible         =   True
-   Width           =   1.19e+2
+   Width           =   600
+   Begin HTTP.BaseClient Client
+      Address         =   ""
+      Height          =   32
+      Index           =   -2147483648
+      Left            =   542
+      LockedInPosition=   False
+      Port            =   0
+      Scope           =   0
+      TabPanelIndex   =   0
+      Top             =   32
+      Width           =   32
+   End
    Begin PushButton PushButton1
       AutoDeactivate  =   True
       Bold            =   ""
       ButtonStyle     =   0
       Cancel          =   ""
-      Caption         =   "Server Demo"
+      Caption         =   "Untitled"
       Default         =   ""
       Enabled         =   True
       Height          =   22
@@ -37,7 +49,7 @@ Begin Window Window1
       Index           =   -2147483648
       InitialParent   =   ""
       Italic          =   ""
-      Left            =   10
+      Left            =   378
       LockBottom      =   ""
       LockedInPosition=   False
       LockLeft        =   True
@@ -50,41 +62,52 @@ Begin Window Window1
       TextFont        =   "System"
       TextSize        =   0
       TextUnit        =   0
-      Top             =   14
+      Top             =   -2
       Underline       =   ""
       Visible         =   True
-      Width           =   101
+      Width           =   80
    End
-   Begin PushButton PushButton2
+   Begin TextField TextField1
+      AcceptTabs      =   ""
+      Alignment       =   0
       AutoDeactivate  =   True
+      AutomaticallyCheckSpelling=   False
+      BackColor       =   &hFFFFFF
       Bold            =   ""
-      ButtonStyle     =   0
-      Cancel          =   ""
-      Caption         =   "Client Demo"
-      Default         =   ""
+      Border          =   True
+      CueText         =   ""
+      DataField       =   ""
+      DataSource      =   ""
       Enabled         =   True
+      Format          =   ""
       Height          =   22
       HelpTag         =   ""
       Index           =   -2147483648
-      InitialParent   =   ""
       Italic          =   ""
-      Left            =   10
+      Left            =   0
+      LimitText       =   0
       LockBottom      =   ""
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   ""
       LockTop         =   True
+      Mask            =   ""
+      Password        =   ""
+      ReadOnly        =   ""
       Scope           =   0
       TabIndex        =   1
       TabPanelIndex   =   0
       TabStop         =   True
+      Text            =   "http://www.google.com/"
+      TextColor       =   &h000000
       TextFont        =   "System"
       TextSize        =   0
       TextUnit        =   0
-      Top             =   40
+      Top             =   -2
       Underline       =   ""
+      UseFocusRing    =   True
       Visible         =   True
-      Width           =   101
+      Width           =   373
    End
 End
 #tag EndWindow
@@ -92,17 +115,29 @@ End
 #tag WindowCode
 #tag EndWindowCode
 
-#tag Events PushButton1
+#tag Events Client
 	#tag Event
-		Sub Action()
-		  ServerDemo.Show
+		Sub Error()
+		  Break
+		End Sub
+	#tag EndEvent
+	#tag Event
+		Sub Response(ServerResponse As HTTP.Response, OriginalRequest As HTTP.Request)
+		  #pragma Unused ServerResponse
+		  #pragma Unused OriginalRequest
+		  Break
 		End Sub
 	#tag EndEvent
 #tag EndEvents
-#tag Events PushButton2
+#tag Events PushButton1
 	#tag Event
 		Sub Action()
-		  ClientDemo.Show
+		  Dim req As New HTTP.Request
+		  req.MethodName = "GET"
+		  req.Path = New HTTP.URI(TextField1.Text)
+		  'System.GetNetworkInterface(0).IPAddress + ":8080/")
+		  req.ProtocolVersion = 1.0
+		  Client.SendRequest(req)
 		End Sub
 	#tag EndEvent
 #tag EndEvents
