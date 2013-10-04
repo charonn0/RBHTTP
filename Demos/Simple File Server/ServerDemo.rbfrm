@@ -16,9 +16,9 @@ Begin Window ServerDemo
    MaxWidth        =   32000
    MenuBar         =   1027555327
    MenuBarVisible  =   True
-   MinHeight       =   64
+   MinHeight       =   546
    MinimizeButton  =   True
-   MinWidth        =   64
+   MinWidth        =   433
    Placement       =   2
    Resizeable      =   True
    Title           =   "Server Demo"
@@ -104,6 +104,7 @@ Begin Window ServerDemo
       AuthenticationRealm=   "Restricted Area"
       AuthenticationRequired=   ""
       CertificatePassword=   ""
+      ConnectionType  =   ""
       DirectoryBrowsing=   True
       EnforceContentType=   True
       Height          =   32
@@ -114,6 +115,7 @@ Begin Window ServerDemo
       MinimumSocketsAvailable=   2
       Port            =   0
       Scope           =   0
+      Secure          =   ""
       SessionTimeout  =   600
       TabPanelIndex   =   0
       Threading       =   True
@@ -168,7 +170,7 @@ Begin Window ServerDemo
       InitialParent   =   ""
       Italic          =   False
       Left            =   2
-      LockBottom      =   False
+      LockBottom      =   True
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   False
@@ -207,7 +209,7 @@ Begin Window ServerDemo
       Italic          =   False
       Left            =   242
       LimitText       =   0
-      LockBottom      =   False
+      LockBottom      =   True
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   False
@@ -243,7 +245,7 @@ Begin Window ServerDemo
       InitialParent   =   ""
       Italic          =   False
       Left            =   2
-      LockBottom      =   False
+      LockBottom      =   True
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   False
@@ -288,7 +290,7 @@ Begin Window ServerDemo
       InitialValue    =   "Log Data	Date	Type	Thread ID"
       Italic          =   False
       Left            =   0
-      LockBottom      =   False
+      LockBottom      =   True
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   True
@@ -324,7 +326,7 @@ Begin Window ServerDemo
       InitialParent   =   ""
       Italic          =   False
       Left            =   154
-      LockBottom      =   False
+      LockBottom      =   True
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   False
@@ -356,7 +358,7 @@ Begin Window ServerDemo
       InitialParent   =   ""
       Italic          =   False
       Left            =   2
-      LockBottom      =   False
+      LockBottom      =   True
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   False
@@ -462,7 +464,7 @@ Begin Window ServerDemo
       InitialParent   =   ""
       Italic          =   False
       Left            =   2
-      LockBottom      =   False
+      LockBottom      =   True
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   False
@@ -495,7 +497,7 @@ Begin Window ServerDemo
       InitialParent   =   ""
       Italic          =   False
       Left            =   0
-      LockBottom      =   False
+      LockBottom      =   True
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   False
@@ -527,7 +529,7 @@ Begin Window ServerDemo
       Italic          =   False
       Left            =   101
       ListIndex       =   0
-      LockBottom      =   False
+      LockBottom      =   True
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   False
@@ -590,11 +592,11 @@ Begin Window ServerDemo
       InitialParent   =   ""
       Italic          =   ""
       Left            =   154
-      LockBottom      =   ""
+      LockBottom      =   True
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   ""
-      LockTop         =   True
+      LockTop         =   False
       Scope           =   0
       TabIndex        =   29
       TabPanelIndex   =   0
@@ -831,7 +833,7 @@ End
 		  Me.RowTag(4) = -2
 		  Me.AddRow("Socket")
 		  Me.RowTag(5) = -3
-		  Me.ListIndex = 2
+		  Me.ListIndex = 5
 		End Sub
 	#tag EndEvent
 #tag EndEvents
