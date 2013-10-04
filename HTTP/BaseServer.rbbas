@@ -5,26 +5,19 @@ Inherits ServerSocket
 		Function AddSocket() As TCPSocket
 		  Me.Log(CurrentMethodName, Log_Socket)
 		  Dim sock As New SSLSocket
-		  If Me.ConnectionType <> ConnectionTypes.Insecure Then
+		  If Me.Secure Then
 		    sock.CertificatePassword = Me.CertificatePassword
 		    sock.CertificateFile = Me.CertificateFile
 		    sock.Secure = True
-		  End If
-		  
-		  Select Case Me.ConnectionType
-		  Case ConnectionTypes.SSLv3
-		    Sock.ConnectionType = SSLSocket.SSLv3
-		  Case ConnectionTypes.TLSv1
-		    Sock.ConnectionType = SSLSocket.TLSv1
-		  Case ConnectionTypes.Insecure
+		    sock.ConnectionType = Integer(Me.ConnectionType)
+		  Else
 		    sock.Secure = False
-		  End Select
+		  End If
 		  AddHandler sock.DataAvailable, WeakAddressOf Me.DataAvailable
 		  AddHandler sock.Error, WeakAddressOf Me.ClientErrorHandler
 		  AddHandler sock.SendComplete, WeakAddressOf Me.SendCompleteHandler
 		  
 		  If Me.Threading Then
-		    Me.Log("Create idle worker thread", Log_Trace)
 		    Dim worker As New Thread
 		    AddHandler worker.Run, WeakAddressOf Me.ThreadRun
 		    IdleThreads.Insert(0, worker)
@@ -715,7 +708,7 @@ Inherits ServerSocket
 		    If Session.NewSession Then
 		      Me.Log("Set session cookie: " + Session.SessionID, Log_Trace)
 		      Dim c As New Cookie("SessionID=" + Session.SessionID)
-		      c.Secure = (Me.ConnectionType <> ConnectionTypes.Insecure)
+		      c.Secure = Me.Secure
 		      c.Path = "/"
 		      c.Port = Me.Port
 		      ResponseDocument.Headers.Cookie(-1) = c
@@ -952,20 +945,23 @@ Inherits ServerSocket
 		#tag EndGetter
 		#tag Setter
 			Set
-			  Select Case value
-			  Case ConnectionTypes.Insecure
-			    Me.Log(CurrentMethodName + "=Insecure", Log_Trace)
-			  Case ConnectionTypes.SSLv3
-			    Me.Log(CurrentMethodName + "=SSLv3", Log_Trace)
-			  Case ConnectionTypes.TLSv1
-			    Me.Log(CurrentMethodName + "=TLSv1", Log_Trace)
-			  Else
-			    Me.Log(CurrentMethodName + "=Unknown!", Log_Trace)
-			  End Select
 			  mConnectionType = value
+			  
+			  Dim logdata As String
+			  Select Case value
+			  Case SSLSocket.SSLv2 
+			    logdata = "SSLv2"
+			  Case SSLSocket.SSLv23
+			    logdata = "SSLv2/3"
+			  Case SSLSocket.SSLv3
+			    logdata = "SSLv3"
+			  Case SSLSocket.TLSv1
+			    logdata = "TLSv1"
+			  End Select
+			  Me.Log(CurrentMethodName + "=" + logdata, Log_Trace)
 			End Set
 		#tag EndSetter
-		ConnectionType As ConnectionTypes
+		ConnectionType As Integer
 	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
@@ -1025,7 +1021,7 @@ Inherits ServerSocket
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mConnectionType As ConnectionTypes = ConnectionTypes.Insecure
+		Private mConnectionType As Integer
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -1042,6 +1038,10 @@ Inherits ServerSocket
 
 	#tag Property, Flags = &h21
 		Private mRedirectsLock As Semaphore
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mSecure As Boolean
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -1105,6 +1105,21 @@ Inherits ServerSocket
 			End Set
 		#tag EndSetter
 		Private RedirectsLock As Semaphore
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  return mSecure
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  mSecure = value
+			  Me.Log(CurrentMethodName + "=""" + Str(value) + """", Log_Trace)
+			End Set
+		#tag EndSetter
+		Secure As Boolean
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h1
