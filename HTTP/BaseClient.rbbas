@@ -2,6 +2,15 @@
 Protected Class BaseClient
 Inherits TCPSocket
 	#tag Event
+		Sub Connected()
+		  TickleTimer = New Timer
+		  AddHandler TickleTimer.Action, WeakAddressOf Me.Tickler
+		  TickleTimer.Period = 1
+		  RaiseEvent Connected()
+		End Sub
+	#tag EndEvent
+
+	#tag Event
 		Sub DataAvailable()
 		  #If DebugBuild Then
 		    Dim peek As String = Me.Lookahead
@@ -27,7 +36,7 @@ Inherits TCPSocket
 		    'DataBuffer = ""
 		    If h.HasHeader("Content-Length") Then
 		      Dim contentlength As Integer = Val(h.GetHeader("Content-Length"))
-		      If contentlength + avail <= Me.BytesAvailable Then
+		      If contentlength + avail - 8 <= Me.BytesAvailable Then
 		        Dim reply As New HTTP.Response(Me.Read(contentlength + avail))
 		        RaiseEvent Response(reply, OutStandingRequests.Pop)
 		      Else
@@ -40,6 +49,9 @@ Inherits TCPSocket
 		      Dim reply As New HTTP.Response(Me.ReadAll)
 		      RaiseEvent Response(reply, OutStandingRequests.Pop)
 		    End If
+		    TickleTimer.Mode = Timer.ModeOff
+		  Else
+		    TickleTimer.Mode = Timer.ModeMultiple
 		  End If
 		  
 		  
@@ -147,12 +159,26 @@ Inherits TCPSocket
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Sub Tickler(Sender As Timer)
+		  '#pragma Unused Sender
+		  Me.Poll
+		  If Me.BytesAvailable > 0 Then
+		    Sender.Mode = Timer.ModeSingle
+		  End If
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Sub TimeOutHandler(Sender As Timer)
 		  #pragma Unused Sender
 		  Me.Disconnect
 		End Sub
 	#tag EndMethod
 
+
+	#tag Hook, Flags = &h0
+		Event Connected()
+	#tag EndHook
 
 	#tag Hook, Flags = &h0
 		Event Response(ServerResponse As HTTP.Response, OriginalRequest As HTTP.Request)
@@ -169,6 +195,10 @@ Inherits TCPSocket
 
 	#tag Property, Flags = &h21
 		Private ResponseLength As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private TickleTimer As Timer
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
