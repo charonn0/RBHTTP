@@ -14,6 +14,7 @@ Inherits TCPSocket
 		Sub DataAvailable()
 		  #If DebugBuild Then
 		    Dim peek As String = Me.Lookahead
+		    #pragma Unused peek
 		  #endif
 		  
 		  If Me.BytesAvailable >= WaitForDataLen Then
