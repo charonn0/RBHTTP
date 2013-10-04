@@ -199,7 +199,7 @@ Protected Class Session
 			      mSessionID = Format(Microseconds, "00000000000")
 			    #endif
 			    mSessionID = EncodeHex(MD5(mSessionID))
-			    Log("Generated new session id: " + mSessionID, BaseServer.Log_Trace)
+			    'Log("Generated new session id: " + mSessionID, BaseServer.Log_Trace)
 			    Me.NewSession = True
 			  End If
 			  Return mSessionID

@@ -3,7 +3,7 @@ Protected Class BaseServer
 Inherits ServerSocket
 	#tag Event
 		Function AddSocket() As TCPSocket
-		  Me.Log(CurrentMethodName, Log_Socket)
+		  Me.Log(CurrentMethodName, Log_Trace)
 		  Dim sock As New SSLSocket
 		  If Me.Secure Then
 		    sock.CertificatePassword = Me.CertificatePassword
@@ -63,10 +63,9 @@ Inherits ServerSocket
 		  ' is returned to client.
 		  ' On success, or if AuthenticationRequired is False, then this method returns Nil
 		  
-		  Me.Log(CurrentMethodName + "(" + ClientRequest.SessionID + ")", Log_Trace)
 		  Dim doc As HTTP.Response
 		  If AuthenticationRequired Then
-		    Me.Log("Authenticating", Log_Trace)
+		    Me.Log(CurrentMethodName + "(" + ClientRequest.SessionID + ")", Log_Trace)
 		    If Not Authenticate(clientrequest) Then
 		      Me.Log("Authentication failed", Log_Error)
 		      doc = GetErrorResponse(401, clientrequest.Path.ServerPath)
@@ -87,20 +86,18 @@ Inherits ServerSocket
 		  ' is found, then it is returned to the client. If no cached response is found, or
 		  ' if the request explicitly overrides the cache then this function returns Nil.
 		  
-		  Me.Log(CurrentMethodName + "(" + ClientRequest.SessionID + ")", Log_Trace)
 		  Dim cache As HTTP.Response
 		  If UseSessions Then
+		    Me.Log(CurrentMethodName + "(" + ClientRequest.SessionID + ")", Log_Trace)
 		    If clientrequest.CacheDirective <> "" Then
 		      Select Case clientrequest.CacheDirective
 		      Case "no-cache", "max-age=0"
-		        Me.Log("Cache control override: " + clientrequest.CacheDirective, Log_Trace)
 		        cache = Nil
 		      End Select
 		    Else
 		      cache = GetCache(Session, clientRequest.Path.ToString)
 		    End If
 		    If cache <> Nil Then
-		      Me.Log("Page from cache", Log_Debug)
 		      Cache.Expires = New Date
 		      Cache.Expires.TotalSeconds = Cache.Expires.TotalSeconds + 60
 		      If clientrequest.IsModifiedSince(Cache.Expires) Then
@@ -126,7 +123,6 @@ Inherits ServerSocket
 		  ' is returned to the client. If the specified version is supported, this function
 		  ' returns Nil.
 		  
-		  Me.Log(CurrentMethodName + "(" + ClientRequest.SessionID + ")", Log_Trace)
 		  Dim doc As HTTP.Response
 		  If clientrequest.ProtocolVersion < 1.0 Or clientrequest.ProtocolVersion >= 1.2 Then
 		    doc = GetErrorResponse(505, Format(ClientRequest.ProtocolVersion, "#.0"))
@@ -145,7 +141,6 @@ Inherits ServerSocket
 		  ' If a redirected response is found, then it is returned to the client. If no redirected
 		  ' response is found then this function returns Nil.
 		  
-		  Me.Log(CurrentMethodName + "(" + ClientRequest.SessionID + ")", Log_Trace)
 		  While Not RedirectsLock.TrySignal
 		    App.YieldToNextThread
 		  Wend
@@ -164,12 +159,10 @@ Inherits ServerSocket
 		  ' response is not acceptable, an error (HTTP 406 Nat Acceptable) is returned to
 		  ' client.
 		  If EnforceContentType And ClientRequest.ProtocolVersion > 1.0 And doc.StatusCode < 300 And doc.StatusCode >= 200 Then
-		    Me.Log("Checking Accepts", Log_Trace)
 		    Dim tcount As Integer
 		    tcount = UBound(clientrequest.Headers.AcceptableTypes)
 		    For i As Integer = 0 To tcount
 		      If clientrequest.Headers.AcceptableTypes(i).Accepts(doc.MIMEType) Then
-		        Me.Log("Response is a Acceptable", Log_Debug)
 		        Return
 		      End If
 		    Next
@@ -193,7 +186,6 @@ Inherits ServerSocket
 
 	#tag Method, Flags = &h21
 		Private Sub DataAvailable(Sender As SSLSocket)
-		  Me.Log(CurrentMethodName, Log_Trace)
 		  If Me.Threading Then
 		    ' Grab a thread from the pool and associate it with the requesting socket.
 		    ' The ThreadRun method handles the Thread.Run event of the worker thread,
@@ -225,7 +217,6 @@ Inherits ServerSocket
 		    Dim session As HTTP.Session
 		    Try
 		      clientrequest = New HTTP.Request(data, UseSessions)
-		      Me.Log("Request is well formed", Log_Debug)
 		      Me.Log(DecodeURLComponent(clientrequest.ToString), Log_Request)
 		      If clientrequest.HasHeader("Content-Length") Then
 		        Dim cl As Integer = Val(clientrequest.GetHeader("Content-Length"))
@@ -258,6 +249,7 @@ Inherits ServerSocket
 		      Dim tmp As HTTP.Request = clientrequest
 		      If TamperRequest(tmp) Then ' allows subclasses to modify requests before they are processed
 		        clientrequest = tmp
+		        Me.Log("Inbound tamper.", Log_Trace)
 		      End If
 		      
 		      ' start processing the request. As soon as doc <> Nil, we're done.
@@ -302,7 +294,7 @@ Inherits ServerSocket
 		            Me.Log("Request is malformed", Log_Error)
 		          ElseIf clientrequest.MethodName <> "" Then
 		            doc = GetErrorResponse(405, clientrequest.MethodName)
-		            Me.Log("Request is a NOT ALLOWED", Log_Error)
+		            Me.Log("Request method not allowed", Log_Error)
 		          End If
 		        End Select
 		        Exit Do 'Done constructing the error message
@@ -315,7 +307,7 @@ Inherits ServerSocket
 		      
 		    Catch err As UnsupportedFormatException
 		      doc = GetErrorResponse(400, "") 'bad request
-		      Me.Log("Request is NOT well formed", Log_Error)
+		      Me.Log("Malformed request", Log_Error)
 		    End Try
 		    
 		    ' Finally, send the response to the client
@@ -422,11 +414,10 @@ Inherits ServerSocket
 		  If UseSessions Then logID = Sender.SessionID
 		  If UseSessions Then
 		    If Sender.GetCacheItem(Path) <> Nil Then
-		      Me.Log("(hit!) Get cache item: " + Path, Log_Debug)
+		      Me.Log("Session cache hit: " + Path, Log_Trace)
 		      Return Sender.GetCacheItem(Path)
 		    End If
 		  End If
-		  Me.Log("(miss!) Get cache item: " + Path, Log_Trace)
 		End Function
 	#tag EndMethod
 
@@ -504,28 +495,23 @@ Inherits ServerSocket
 		    'If Right(Path, 1) = "/" And Path <> "/" Then Path = Left(Path, Path.Len - 1)
 		    Dim logID As String = "NO_SESSION"
 		    If UseSessions Then logID = Sender.SessionID
-		    Me.Log(CurrentMethodName + "(" + Path + ") for session " + logID, Log_Trace)
-		    If UseSessions THen
+		    If UseSessions Then
 		      If Sender.GetRedirect(Path) <> Nil Then
-		        Me.Log("(session hit!) Get redirect: " + Path, Log_Debug)
+		        Me.Log("Session redirect hit: " + Path, Log_Trace)
 		        Return Sender.GetRedirect(Path)
 		      End If
 		    End If
 		  End If
 		  
-		  Me.Log(CurrentMethodName + "(" + Path + ")", Log_Trace)
-		  
 		  If Me.Redirects.HasKey(Path) Then
-		    Me.Log("(server hit!) Get redirect: " + Path, Log_Debug)
+		    Me.Log("Server redirect hit: " + Path, Log_Trace)
 		    Return Me.Redirects.Value(Path)
 		  End If
 		  
 		  If Me.GlobalRedirects.HasKey(Path) Then
-		    Me.Log("(GLOBAL hit!) Get redirect: " + Path, Log_Debug)
+		    Me.Log("Global redirect hit: " + Path, Log_Trace)
 		    Return Me.GlobalRedirects.Value(Path)
 		  End If
-		  
-		  Me.Log("(miss!) Get redirect: " + Path, Log_Trace)
 		End Function
 	#tag EndMethod
 
@@ -548,7 +534,7 @@ Inherits ServerSocket
 
 	#tag Method, Flags = &h21
 		Private Function GetSession(Socket As SSLSocket) As HTTP.Session
-		  Me.Log(CurrentMethodName + "(0x" + Left(Hex(Socket.Handle) + "00000000", 8) + ")", Log_Trace)
+		  'Me.Log(CurrentMethodName + "(0x" + Left(Hex(Socket.Handle) + "00000000", 8) + ")", Log_Trace)
 		  Dim Session As HTTP.Session
 		  If UseSessions Then
 		    If Me.Sockets.HasKey(Socket) Then
@@ -556,6 +542,7 @@ Inherits ServerSocket
 		    Else
 		      Session = Me.GetSession("New_Session")
 		      Sockets.Value(Socket) = Session.SessionID
+		      Me.Log("Created session: " + Session.SessionID + " for socket " + Left(Hex(Socket.Handle) + "00000000", 8), Log_Trace)
 		    End If
 		  End If
 		  Return Session
@@ -564,11 +551,10 @@ Inherits ServerSocket
 
 	#tag Method, Flags = &h1
 		Protected Function GetSession(SessionID As String) As HTTP.Session
-		  Me.Log(CurrentMethodName + "(" + SessionID + ")", Log_Trace)
+		  'Me.Log(CurrentMethodName + "(" + SessionID + ")", Log_Trace)
 		  Dim session As HTTP.Session
 		  If UseSessions Then
 		    If Me.Sessions.HasKey(SessionID) Then
-		      Me.Log("Session found: " + SessionID, Log_Debug)
 		      While Not SessionsLock.TrySignal
 		        App.YieldToNextThread
 		      Wend
@@ -595,7 +581,6 @@ Inherits ServerSocket
 
 	#tag Method, Flags = &h21
 		Private Function GetSocket(ClientThread As Thread) As SSLSocket
-		  Me.Log(CurrentMethodName, Log_Trace)
 		  Dim Socket As SSLSocket
 		  If Me.Threads.HasKey(ClientThread) Then
 		    Socket = Me.Threads.Value(ClientThread)
@@ -606,7 +591,6 @@ Inherits ServerSocket
 
 	#tag Method, Flags = &h21
 		Private Function GetThread(Sender As SSLSocket) As Thread
-		  Me.Log(CurrentMethodName, Log_Trace)
 		  For Each w As Thread In Threads.Keys
 		    If Threads.Value(w) Is Sender Then
 		      Return w
@@ -617,8 +601,7 @@ Inherits ServerSocket
 
 	#tag Method, Flags = &h0
 		Sub Listen()
-		  Me.Log(CurrentMethodName, Log_Trace)
-		  Me.Log("Server now listening...", Log_Socket)
+		  Me.Log("Server now listening...", Log_Status)
 		  Sessions = New Dictionary
 		  Sockets = New Dictionary
 		  Super.Listen
@@ -644,18 +627,14 @@ Inherits ServerSocket
 		  ' If the GZip plugin is used, we must confirm that the client has requested
 		  ' gzip-encoded responses. Compression only takes place if the client asks for it.
 		  #If (GZIPAvailable And TargetHasGUI) Then
-		    Me.Log(CurrentMethodName + "(" + ResponseDocument.SessionID + ")", Log_Trace)
 		    If ResponseDocument.Compressible And ResponseDocument.MessageBody.LenB > 0 And Me.UseCompression Then
 		      Dim gz As MemoryBlock = ResponseDocument.MessageBody
 		      If gz.Byte(0) = &h1F And gz.Byte(1) = &h8B Then Return
 		      Try
 		        gz = Replace(ResponseDocument.MessageBody, "%COMPRESSION%", "Compressed with GZip " + GZip.Version)
-		        Dim size As Integer = gz.LenB
 		        gz = GZip.Compress(gz)
 		        ResponseDocument.MessageBody = gz
 		        ResponseDocument.SetHeader("Content-Encoding") ="gzip"
-		        size = gz.LenB * 100 / size
-		        Me.Log("GZipped page to " + Format(size, "##0.0##\%") + " of original", Log_Debug)
 		        ResponseDocument.SetHeader("Content-Length") = Str(gz.LenB)
 		      Catch Error
 		        Me.Log("GZip error " + Str(GZip.Error), Log_Error)
@@ -673,9 +652,6 @@ Inherits ServerSocket
 
 	#tag Method, Flags = &h21
 		Private Sub PrepareResponse(ByRef ResponseDocument As HTTP.Response, Socket As SSLSocket)
-		  Dim logID As String = "NO_SESSION"
-		  If UseSessions Then logID = ResponseDocument.SessionID + ")"
-		  Me.Log(CurrentMethodName + "(" + logID + ")", Log_Trace)
 		  If ResponseDocument.Method = RequestMethod.HEAD Then
 		    ResponseDocument.SetHeader("Content-Length") = Str(ResponseDocument.MessageBody.LenB)
 		    ResponseDocument.MessageBody = ""
@@ -700,13 +676,9 @@ Inherits ServerSocket
 
 	#tag Method, Flags = &h21
 		Private Sub PrepareSession(ByRef ResponseDocument As HTTP.Response, ByRef Session As HTTP.Session)
-		  Dim logID As String = "NO_SESSION"
-		  If UseSessions Then logID = Session.SessionID
-		  Me.Log(CurrentMethodName + "(" + logID + ")", Log_Trace)
 		  If UseSessions Then
 		    Session.ExtendSession
 		    If Session.NewSession Then
-		      Me.Log("Set session cookie: " + Session.SessionID, Log_Trace)
 		      Dim c As New Cookie("SessionID=" + Session.SessionID)
 		      c.Secure = Me.Secure
 		      c.Path = "/"
@@ -715,7 +687,6 @@ Inherits ServerSocket
 		      'ResponseDocument.Headers.Cookie
 		      Session.NewSession = False
 		    ElseIf ResponseDocument.HasCookie("SessionID") Then
-		      Me.Log("Clear session cookie", Log_Debug)
 		      ResponseDocument.RemoveCookie("SessionID")
 		    End If
 		  End If
@@ -728,7 +699,6 @@ Inherits ServerSocket
 		  ' See also: AddRedirect
 		  
 		  Me.Log(CurrentMethodName + "(" + HTTPpath + ")", Log_Trace)
-		  Me.Log(CurrentMethodName, Log_Trace)
 		  If Redirects.HasKey(HTTPpath) Then
 		    Me.Log("Removed redirect: " + HTTPPath, Log_Debug)
 		    Redirects.Remove(HTTPpath)
@@ -739,24 +709,21 @@ Inherits ServerSocket
 	#tag Method, Flags = &h21
 		Private Sub SendCompleteHandler(Sender As SSLSocket, UserAborted As Boolean)
 		  #pragma Unused UserAborted
-		  Me.Log("Send complete", Log_Socket)
+		  'Dim sockID As String = "(0x" + Left(Hex(Sender.Handle) + "00000000", 8) + ")"
 		  Sender.Close
-		  Me.Log("Socket closed", Log_Trace)
+		  'Me.Log("Socket " + sockID + " closed", Log_Socket)
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
 		Private Sub SendResponse(Socket As SSLSocket, ResponseDocument As HTTP.Response)
-		  Dim logID As String = "NO_SESSION"
 		  Dim session As HTTP.Session
 		  If UseSessions Then
 		    session = GetSession(Socket)
-		    logID = Session.SessionID
 		  End If
-		  Me.Log(CurrentMethodName + "(" + LogID + ")", Log_Trace)
 		  Dim tmp As HTTP.Response = ResponseDocument
 		  If TamperResponse(tmp) Then
-		    Me.Log("Outbound tamper.", Log_Debug)
+		    Me.Log("Outbound tamper.", Log_Trace)
 		    ResponseDocument = tmp
 		  End If
 		  
@@ -764,10 +731,10 @@ Inherits ServerSocket
 		  PrepareSession(ResponseDocument, session)
 		  PrepareCompression(ResponseDocument)
 		  
-		  Me.Log("Sending data", Log_Socket)
+		  Me.Log("Writing data", Log_Socket)
 		  Socket.Write(ResponseDocument.ToString)
 		  Me.Log(ReplyString(ResponseDocument.StatusCode) + CRLF + ResponseDocument.Headers.Source(True), Log_Response)
-		  If UseSessions And ResponseDocument.Method = RequestMethod.GET And ResponseDocument.StatusCode = 200 Then
+		  If Session <> Nil And ResponseDocument.Method = RequestMethod.GET And ResponseDocument.StatusCode = 200 Then
 		    Session.AddCacheItem(ResponseDocument)
 		  End If
 		  Socket.Flush
@@ -788,7 +755,7 @@ Inherits ServerSocket
 		Sub StopListening()
 		  Me.Log(CurrentMethodName, Log_Trace)
 		  Super.StopListening
-		  Me.Log("Server stopped listening.", Log_Socket)
+		  Me.Log("Server stopped listening.", Log_Status)
 		  
 		  Me.Sessions = New Dictionary
 		  Me.Sockets = New Dictionary
@@ -799,7 +766,7 @@ Inherits ServerSocket
 
 	#tag Method, Flags = &h21
 		Private Sub ThreadRun(Sender As Thread)
-		  If Me.Threading Then Me.Log("Your server today is 0x" + Left(Hex(Sender.ThreadID) + "00000000", 8), Log_Trace)
+		  'If Me.Threading Then Me.Log("Your server today is 0x" + Left(Hex(Sender.ThreadID) + "00000000", 8), Log_Trace)
 		  DefaultHandler(GetSocket(Sender))
 		End Sub
 	#tag EndMethod
@@ -811,14 +778,13 @@ Inherits ServerSocket
 		  For Each Id As String In Sessions.Keys
 		    Dim session As HTTP.Session = Me.Sessions.Value(Id)
 		    If session.LastActivity.TotalSeconds + Me.SessionTimeout < d.TotalSeconds Then
-		      Me.Log("Session timed out (" + ID + ")", Log_Debug)
+		      Me.Log("Session timed out (" + ID + ")", Log_Trace)
 		      Me.Sessions.Remove(Id)
 		    End If
 		  Next
 		  
 		  For Each Socket As SSLSocket In Me.Sockets.Keys
 		    If Not Sessions.HasKey(Me.Sockets.Value(Socket)) Or Not Socket.IsConnected Then
-		      Me.Log("Socket destroyed", Log_Socket)
 		      Socket.Close
 		      Me.Sockets.Remove(Socket)
 		    End If
@@ -826,7 +792,6 @@ Inherits ServerSocket
 		  
 		  For Each t As Thread In Me.Threads.Keys
 		    If t.State <> 0 Then
-		      Me.Log("Thread destroyed", Log_Trace)
 		      Me.Threads.Remove(t)
 		    End If
 		  Next
@@ -949,7 +914,7 @@ Inherits ServerSocket
 			  
 			  Dim logdata As String
 			  Select Case value
-			  Case SSLSocket.SSLv2 
+			  Case SSLSocket.SSLv2
 			    logdata = "SSLv2"
 			  Case SSLSocket.SSLv23
 			    logdata = "SSLv2/3"
@@ -1284,6 +1249,11 @@ Inherits ServerSocket
 			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="ConnectionType"
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="EnforceContentType"
 			Visible=true
 			Group="Behavior"
@@ -1332,6 +1302,11 @@ Inherits ServerSocket
 			InitialValue="0"
 			Type="Integer"
 			InheritedFrom="ServerSocket"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Secure"
+			Group="Behavior"
+			Type="Boolean"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SessionTimeout"
