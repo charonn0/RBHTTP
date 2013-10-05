@@ -77,7 +77,9 @@ Inherits HTTP.BaseServer
 		    Dim icon As HTTP.Response
 		    Dim tmp As FolderItem = GetTemporaryFolderItem
 		    Dim bs As BinaryStream = BinaryStream.Open(tmp, True)
-		    bs.Write(icons.Value(img))'.Save(tmp, Picture.SaveAsPNG)
+		    Dim p As Picture = icons.Value(img)
+		    bs.Write(p.GetData(Picture.FormatPNG))
+		    '.Save(tmp, Picture.SaveAsPNG)
 		    bs.Close
 		    icon = GetFileResponse(tmp, img)
 		    icon.SetHeader("Content-Length") = Str(icon.MessageBody.LenB)
@@ -254,6 +256,12 @@ Inherits HTTP.BaseServer
 			InheritedFrom="HTTP.BaseServer"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="ConnectionType"
+			Group="Behavior"
+			Type="Integer"
+			InheritedFrom="HTTP.BaseServer"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="DirectoryBrowsing"
 			Visible=true
 			Group="Behavior"
@@ -312,6 +320,12 @@ Inherits HTTP.BaseServer
 			InitialValue="0"
 			Type="Integer"
 			InheritedFrom="ServerSocket"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Secure"
+			Group="Behavior"
+			Type="Boolean"
+			InheritedFrom="HTTP.BaseServer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SessionTimeout"
