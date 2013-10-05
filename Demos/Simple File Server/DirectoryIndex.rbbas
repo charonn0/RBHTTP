@@ -201,7 +201,7 @@ Inherits HTTP.Response
 		      line = ReplaceAll(line, "%FILETYPE%", "Directory")
 		    Else
 		      icon = GetIcon(NthField(item.name, ".", CountFields(item.name, ".")))
-		      line = ReplaceAll(line, "%FILESIZE%", HTTP.FormatBytes(item.Length))
+		      line = ReplaceAll(line, "%FILESIZE%", HTTP.Helpers.FormatBytes(item.Length))
 		      line = ReplaceAll(line, "%FILETYPE%", type.ToString)
 		    End if
 		    line = ReplaceAll(line, "%FILEICON%", icon)
