@@ -78,11 +78,7 @@ Protected Class ContentType
 	#tag Method, Flags = &h0
 		 Shared Function GetType(FileName As String) As ContentType
 		  Dim ext As String = NthField(FileName, ".", CountFields(FileName, "."))
-		  If MIMETypes.HasKey(ext) Then
-		    Return New ContentType(MIMETypes.Value(ext).StringValue)
-		  End If
-		  Return New ContentType("application/octet-stream")
-		  
+		  Return New ContentType(MIMETypes.Lookup(ext, "application/octet-stream").StringValue)
 		End Function
 	#tag EndMethod
 

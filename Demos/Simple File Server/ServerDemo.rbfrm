@@ -104,6 +104,7 @@ Begin Window ServerDemo
       AuthenticationRealm=   "Restricted Area"
       AuthenticationRequired=   ""
       CertificatePassword=   ""
+      ConnectionType  =   ""
       DirectoryBrowsing=   True
       EnforceContentType=   True
       Height          =   32
@@ -114,6 +115,7 @@ Begin Window ServerDemo
       MinimumSocketsAvailable=   2
       Port            =   0
       Scope           =   0
+      Secure          =   ""
       SessionTimeout  =   600
       TabPanelIndex   =   0
       Threading       =   True
@@ -168,7 +170,7 @@ Begin Window ServerDemo
       InitialParent   =   ""
       Italic          =   False
       Left            =   2
-      LockBottom      =   False
+      LockBottom      =   True
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   False
@@ -207,7 +209,7 @@ Begin Window ServerDemo
       Italic          =   False
       Left            =   242
       LimitText       =   0
-      LockBottom      =   False
+      LockBottom      =   True
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   False
@@ -243,7 +245,7 @@ Begin Window ServerDemo
       InitialParent   =   ""
       Italic          =   False
       Left            =   2
-      LockBottom      =   False
+      LockBottom      =   True
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   False
@@ -288,7 +290,7 @@ Begin Window ServerDemo
       InitialValue    =   "Log Data	Date	Type	Thread ID"
       Italic          =   False
       Left            =   0
-      LockBottom      =   False
+      LockBottom      =   True
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   True
@@ -324,7 +326,7 @@ Begin Window ServerDemo
       InitialParent   =   ""
       Italic          =   False
       Left            =   154
-      LockBottom      =   False
+      LockBottom      =   True
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   False
@@ -356,7 +358,7 @@ Begin Window ServerDemo
       InitialParent   =   ""
       Italic          =   False
       Left            =   2
-      LockBottom      =   False
+      LockBottom      =   True
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   False
@@ -462,7 +464,7 @@ Begin Window ServerDemo
       InitialParent   =   ""
       Italic          =   False
       Left            =   2
-      LockBottom      =   False
+      LockBottom      =   True
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   False
@@ -495,7 +497,7 @@ Begin Window ServerDemo
       InitialParent   =   ""
       Italic          =   False
       Left            =   0
-      LockBottom      =   False
+      LockBottom      =   True
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   False
@@ -527,7 +529,7 @@ Begin Window ServerDemo
       Italic          =   False
       Left            =   101
       ListIndex       =   0
-      LockBottom      =   False
+      LockBottom      =   True
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   False
@@ -557,7 +559,7 @@ Begin Window ServerDemo
       InitialParent   =   ""
       Italic          =   False
       Left            =   234
-      LockBottom      =   False
+      LockBottom      =   True
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   False
@@ -590,11 +592,11 @@ Begin Window ServerDemo
       InitialParent   =   ""
       Italic          =   ""
       Left            =   154
-      LockBottom      =   ""
+      LockBottom      =   True
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   ""
-      LockTop         =   True
+      LockTop         =   False
       Scope           =   0
       TabIndex        =   29
       TabPanelIndex   =   0
@@ -625,7 +627,7 @@ Begin Window ServerDemo
          Italic          =   False
          Left            =   165
          LimitText       =   0
-         LockBottom      =   False
+         LockBottom      =   True
          LockedInPosition=   False
          LockLeft        =   True
          LockRight       =   False
@@ -668,7 +670,7 @@ Begin Window ServerDemo
          Italic          =   False
          Left            =   165
          LimitText       =   0
-         LockBottom      =   False
+         LockBottom      =   True
          LockedInPosition=   False
          LockLeft        =   True
          LockRight       =   False
@@ -711,7 +713,7 @@ Begin Window ServerDemo
          Italic          =   False
          Left            =   165
          LimitText       =   0
-         LockBottom      =   False
+         LockBottom      =   True
          LockedInPosition=   False
          LockLeft        =   True
          LockRight       =   False
