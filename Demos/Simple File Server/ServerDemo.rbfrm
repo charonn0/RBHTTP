@@ -559,7 +559,7 @@ Begin Window ServerDemo
       InitialParent   =   ""
       Italic          =   False
       Left            =   234
-      LockBottom      =   False
+      LockBottom      =   True
       LockedInPosition=   False
       LockLeft        =   True
       LockRight       =   False
@@ -627,7 +627,7 @@ Begin Window ServerDemo
          Italic          =   False
          Left            =   165
          LimitText       =   0
-         LockBottom      =   False
+         LockBottom      =   True
          LockedInPosition=   False
          LockLeft        =   True
          LockRight       =   False
@@ -670,7 +670,7 @@ Begin Window ServerDemo
          Italic          =   False
          Left            =   165
          LimitText       =   0
-         LockBottom      =   False
+         LockBottom      =   True
          LockedInPosition=   False
          LockLeft        =   True
          LockRight       =   False
@@ -713,7 +713,7 @@ Begin Window ServerDemo
          Italic          =   False
          Left            =   165
          LimitText       =   0
-         LockBottom      =   False
+         LockBottom      =   True
          LockedInPosition=   False
          LockLeft        =   True
          LockRight       =   False
